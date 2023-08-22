@@ -1,4 +1,4 @@
-type ObjectKey = string | symbol;
+type ObjectKey = string | symbol | number;
 
 type ObjectType = {
   [key: ObjectKey]: unknown;
@@ -10,15 +10,25 @@ type NestedKeysArrayLikePaths<InputType extends ObjectType> = {
     : [Key];
 }[keyof InputType];
 
-type PathRootAndRest<ArrayLikePath extends ObjectKey[]> =
-  ArrayLikePath extends [infer Root, ...infer Rest]
-    ? [Root, Rest]
-    : [never, never];
-type PathRootAndRestType = [ObjectKey, ObjectKey[]] | [never, never];
+type ObjectWithStringKeys = Record<string, unknown>;
+type NestedKeysStringPaths<InputType extends ObjectWithStringKeys> = {
+  [Key in keyof InputType]: Key extends string
+    ? InputType[Key] extends ObjectWithStringKeys
+      ? Key | `${Key}.${NestedKeysStringPaths<InputType[Key]>}`
+      : Key
+    : never;
+}[keyof InputType];
+
+type Split<StringPath extends string> = StringPath extends ""
+  ? []
+  : StringPath extends `${infer Root}.${infer Rest}`
+  ? [Root, ...Split<Rest>]
+  : [StringPath];
 
 type NestedPropertyType<
   InputType,
-  ArrayLikePath extends ObjectKey[]
+  Path extends ObjectKey[] | string,
+  ArrayLikePath extends ObjectKey[] = Path extends string ? Split<Path> : Path
 > = InputType extends ObjectType
   ? ArrayLikePath["length"] extends 0
     ? InputType
@@ -28,4 +38,4 @@ type NestedPropertyType<
       ]
     ? NestedPropertyType<InputType[Root], Rest>
     : never
-  : never;
+  : InputType;
