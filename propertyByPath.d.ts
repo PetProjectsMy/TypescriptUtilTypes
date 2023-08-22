@@ -27,8 +27,7 @@ type Split<StringPath extends string> = StringPath extends ""
 
 type NestedPropertyType<
   InputType,
-  Path extends ObjectKey[] | string,
-  ArrayLikePath extends ObjectKey[] = Path extends string ? Split<Path> : Path
+  ArrayLikePath extends ObjectKey[]
 > = InputType extends ObjectType
   ? ArrayLikePath["length"] extends 0
     ? InputType
@@ -39,3 +38,26 @@ type NestedPropertyType<
     ? NestedPropertyType<InputType[Root], Rest>
     : never
   : InputType;
+
+// function get<T extends ObjectType, P extends NestedKeysStringPaths<T>>(
+//   obj: T,
+//   path: P
+// ): NestedPropertyType<T, Split<P>>;
+// function get<T extends ObjectType, P>(obj: T, path: P) {
+//   let result: any = obj;
+//   const pathArray = (path as string).split(".");
+
+//   for (const key of pathArray) {
+//     if (!Object.hasOwn(result, key)) {
+//       result = undefined;
+//       return result;
+//     }
+
+//     result = result[key];
+//   }
+
+//   return result;
+// }
+
+// const a = get({ a: { b: { c: 1 } } }, "a");
+// console.log(a);
