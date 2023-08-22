@@ -1,39 +1,31 @@
-declare global {
-  export namespace UtilTypes {
-    type ObjectKey = UtilTypes.ObjectKey;
-    type ObjectType = UtilTypes.ObjectType;
+type ObjectKey = string | symbol;
 
-    type NestedKeysArrayLikePaths<InputType extends ObjectType> = {
-      [Key in keyof InputType]: InputType[Key] extends ObjectType
-        ? [Key] | [Key, ...NestedKeysArrayLikePaths<InputType[Key]>]
-        : [Key];
-    }[keyof InputType];
+type ObjectType = {
+  [key: ObjectKey]: unknown;
+};
 
-    type PathRootAndRest<ArrayLikePath extends ObjectKey[]> = ArrayLikePath extends [
-      infer Root,
-      ...infer Rest
-    ]
-      ? Rest extends never[]
-        ? [Root, never]
-        : [Root, Rest]
-      : [never, never];
+type NestedKeysArrayLikePaths<InputType extends ObjectType> = {
+  [Key in keyof InputType]: InputType[Key] extends ObjectType
+    ? [Key] | [Key, ...NestedKeysArrayLikePaths<InputType[Key]>]
+    : [Key];
+}[keyof InputType];
 
-    type NestedPropertyType<
-      InputType extends ObjectType,
-      ArrayLikePath extends NestedKeysArrayLikePaths<InputType>,
-      Path = PathRootAndRest<ArrayLikePath>,
-      PathRoot = Path[0],
-      PathRest = Path[1]
-    > = InputType extends ObjectType
-      ? PathRoot extends keyof InputType
-        ? [PathRest] extends [never]
-          ? InputType[PathRoot]
-          : NestedPropertyType<InputType[PathRoot], PathRest>
-        : never
-      : never;
+type PathRootAndRest<ArrayLikePath extends ObjectKey[]> =
+  ArrayLikePath extends [infer Root, ...infer Rest]
+    ? [Root, Rest]
+    : [never, never];
+type PathRootAndRestType = [ObjectKey, ObjectKey[]] | [never, never];
 
-    export type { NestedPropertyType };
-  }
-}
-
-export {};
+type NestedPropertyType<
+  InputType,
+  ArrayLikePath extends ObjectKey[]
+> = InputType extends ObjectType
+  ? ArrayLikePath["length"] extends 0
+    ? InputType
+    : ArrayLikePath extends [
+        infer Root extends keyof InputType,
+        ...infer Rest extends ObjectKey[]
+      ]
+    ? NestedPropertyType<InputType[Root], Rest>
+    : never
+  : never;
